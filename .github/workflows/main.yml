@@ -1,0 +1,24 @@
+name: build
+on:
+  push:
+    tags:
+      - latest
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: |
+          FILE=arm-linux-musleabi
+          wget -nv https://musl.cc/$FILE-cross.tgz
+          tar -xf $FILE-cross.tgz
+          make CC=$PWD/$FILE-cross/bin/$FILE-gcc -C src
+
+      - name: Upload
+        uses: softprops/action-gh-release@v1
+        with:
+          files: src/snander
