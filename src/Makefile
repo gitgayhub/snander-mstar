@@ -1,29 +1,12 @@
-# To assist in cross-compiling
-CC=gcc
-LDFLAGS=-pthread -L./lusb_build/lib -lusb-1.0
-TOPDIR=$(shell pwd)
+TARGET ?= snander
+CFLAGS += -Wall -s -static
+FILES += main.o flashcmd_api.o mstar_spi.o spi_controller.o
+FILES += spi_nand_flash.o spi_nor_flash.o timer.o
 
-BIGFILES=-D_FILE_OFFSET_BITS=64
-CFLAGS=-O2 -std=gnu99 -static -Wall -I./lusb_build/include $(BIGFILES)
+all: clean $(TARGET)
 
-OBJS= flashcmd_api.o spi_controller.o spi_nand_flash.o spi_nor_flash.o ch341a_spi.o timer.o main.o
+$(TARGET): $(FILES)
+	$(CC) $(CFLAGS) $(FILES) -o $(TARGET)
 
-all: SNANDer
-
-.lusb_install:
-	mkdir -p lusb_build
-	cd lusb_build; \
-	../libusb-1.0.26/configure --prefix=$(TOPDIR)/lusb_build --disable-udev; \
-	make; \
-	make install
-	touch $@
-
-SNANDer: .lusb_install $(OBJS)
-	$(CC) $(CFLAGS) -s -o $@ $(OBJS) $(LDFLAGS)
-
-.c.o:
-	$(CC) $(CFLAGS) -c $<
-
-clean: 
-	rm -f *.o SNANDer* .lusb_install*
-	rm -rf lusb_build*
+clean:
+	rm -f *.o $(TARGET)

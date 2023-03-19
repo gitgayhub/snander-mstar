@@ -268,6 +268,7 @@ static unsigned long bmt_oob_size = PAGE_OOB_SIZE;
 static u32 erase_oob_size = 0;
 static u32 ecc_size = 0;
 u32 bsize = 0;
+static u8 spi_nand_buffer[3];
 
 static u32 _current_page_num = 0xFFFFFFFF;
 static u8 _current_cache_page[_SPI_NAND_CACHE_SIZE];
@@ -1847,9 +1848,10 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_id ( struct SPI_NAND_FLASH_IN
 	_SPI_NAND_WRITE_ONE_BYTE( _SPI_NAND_ADDR_MANUFACTURE_ID );
 
 	/* 4. Read data (Manufacture ID and Device ID) */
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->mfr_id), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->dev_id), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->dev_id_2), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
+	_SPI_NAND_READ_NBYTE(spi_nand_buffer, _SPI_NAND_LEN_THREE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
+	ptr_rtn_flash_id->mfr_id = spi_nand_buffer[0];
+	ptr_rtn_flash_id->dev_id = spi_nand_buffer[1];
+	ptr_rtn_flash_id->dev_id_2 = spi_nand_buffer[2];
 
 	/* 5. Chip Select High */
 	_SPI_NAND_READ_CHIP_SELECT_HIGH();
@@ -1888,9 +1890,10 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_id_2 ( struct SPI_NAND_FLASH_
 	_SPI_NAND_WRITE_ONE_BYTE( _SPI_NAND_OP_READ_ID );
 
 	/* 3. Read data (Manufacture ID and Device ID) */
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->mfr_id), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->dev_id), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->dev_id_2), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
+	_SPI_NAND_READ_NBYTE(spi_nand_buffer, _SPI_NAND_LEN_THREE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
+	ptr_rtn_flash_id->mfr_id = spi_nand_buffer[0];
+	ptr_rtn_flash_id->dev_id = spi_nand_buffer[1];
+	ptr_rtn_flash_id->dev_id_2 = spi_nand_buffer[2];
 
 	/* 4. Chip Select High */
 	_SPI_NAND_READ_CHIP_SELECT_HIGH();
@@ -1921,7 +1924,6 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_id_2 ( struct SPI_NAND_FLASH_
 static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_id_3 ( struct SPI_NAND_FLASH_INFO_T *ptr_rtn_flash_id )
 {
 	SPI_NAND_FLASH_RTN_T rtn_status = SPI_NAND_FLASH_RTN_NO_ERROR;
-	u8 dummy = 0;
 
 	/* 1. Chip Select Low */
 	_SPI_NAND_READ_CHIP_SELECT_LOW();
@@ -1930,9 +1932,9 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_id_3 ( struct SPI_NAND_FLASH_
 	_SPI_NAND_WRITE_ONE_BYTE( _SPI_NAND_OP_READ_ID );
 
 	/* 3. Read data (Manufacture ID and Device ID) */
-	_SPI_NAND_READ_NBYTE( &dummy, _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->mfr_id), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
-	_SPI_NAND_READ_NBYTE( &(ptr_rtn_flash_id->dev_id), _SPI_NAND_LEN_ONE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
+	_SPI_NAND_READ_NBYTE(spi_nand_buffer, _SPI_NAND_LEN_THREE_BYTE, SPI_CONTROLLER_SPEED_SINGLE);
+	ptr_rtn_flash_id->mfr_id = spi_nand_buffer[1];
+	ptr_rtn_flash_id->dev_id = spi_nand_buffer[2];
 
 	/* 4. Chip Select High */
 	_SPI_NAND_READ_CHIP_SELECT_HIGH();

@@ -25,11 +25,14 @@
 #include <time.h>
 
 #include "flashcmd_api.h"
-#include "ch341a_spi.h"
+#include "spi_controller.h"
 #include "spi_nand_flash.h"
 
 struct flash_cmd prog;
 extern unsigned int bsize;
+
+#define I2C_CONNECTION "/dev/i2c-1"
+const struct spi_controller *spi_controller;
 
 #define _VER	"1.7.8b2"
 
@@ -43,6 +46,7 @@ void usage(void)
 	const char use[] =
 		"  Usage:\n"\
 		" -h             display this message\n"\
+		" -c             programmer connection string\n"\
 		" -d             disable internal ECC(use read and write page size + OOB size)\n"\
 		" -o <bytes>     manual set OOB size with disable internal ECC(default 0)\n"\
 		" -I             ECC ignore errors(for read test only)\n"\
@@ -65,14 +69,19 @@ int main(int argc, char* argv[])
 	char *str, *fname = NULL, op = 0;
 	unsigned char *buf;
 	int long long len = 0, addr = 0, flen = 0, wlen = 0;
+	char *connection = I2C_CONNECTION;
+	spi_controller = &mstar_spictrl;
 	FILE *fp;
 
 	title();
 
-	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:")) != -1)
+	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:c:")) != -1)
 	{
 		switch(c)
 		{
+			case 'c':
+				connection = strdup(optarg);
+				break;
 			case 'I':
 				ECC_ignore = 1;
 				break;
@@ -129,7 +138,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	if (ch341a_spi_init() < 0) {
+	if (spi_controller->init(connection) < 0) {
 		printf("Programmer device not found!\n\n");
 		return -1;
 	}
@@ -279,9 +288,9 @@ very:
 	}
 
 out:	//exit with errors
-	ch341a_spi_shutdown();
+	spi_controller->shutdown();
 	return -1;
 okout:	//exit without errors
-	ch341a_spi_shutdown();
+	spi_controller->shutdown();
 	return 0;
 }

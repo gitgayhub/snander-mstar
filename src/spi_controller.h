@@ -23,11 +23,14 @@
 #define __SPI_CONTROLLER_H__
 
 /* INCLUDE FILE DECLARATIONS --------------------------------------------------------- */
+#include <stddef.h>
 #include "types.h"
 
 /* NAMING CONSTANT DECLARATIONS ------------------------------------------------------ */
 
 /* MACRO DECLARATIONS ---------------------------------------------------------------- */
+#define min(a,b) (((a)<(b))?(a):(b))
+#define max(a,b) (((a)>(b))?(a):(b))
 
 /* TYPE DECLARATIONS ----------------------------------------------------------------- */
 typedef enum{
@@ -51,6 +54,17 @@ typedef enum{
 	SPI_CONTROLLER_MODE_MANUAL,
 	SPI_CONTROLLER_MODE_NO
 } SPI_CONTROLLER_MODE_T;
+
+struct spi_controller {
+	const char *name;
+	int (*init)(const char *);
+	int (*shutdown)(void);
+	int (*send_command)(unsigned int, unsigned int, const unsigned char *, unsigned char *);
+	int (*cs_release)(void);
+};
+
+extern const struct spi_controller *spi_controller;
+extern const struct spi_controller mstar_spictrl;
 
 /*------------------------------------------------------------------------------------
  * FUNCTION: SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Enable_Manual_Mode( void )
