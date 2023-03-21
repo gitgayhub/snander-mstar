@@ -31,37 +31,11 @@
 struct flash_cmd prog;
 extern unsigned int bsize;
 
-#ifdef EEPROM_SUPPORT
-#include "ch341a_i2c.h"
-#include "bitbang_microwire.h"
-#include "spi_eeprom.h"
-extern struct EEPROM eeprom_info;
-extern struct spi_eeprom seeprom_info;
-extern char eepromname[12];
-extern int eepromsize;
-extern int seepromsize;
-extern int mw_eepromsize;
-extern int spage_size;
-extern int org;
-#define EHELP	" -E             select I2C EEPROM {24c01|24c02|24c04|24c08|24c16|24c32|24c64|24c128|24c256|24c512|24c1024}\n" \
-		"                select Microwire EEPROM {93c06|93c16|93c46|93c56|93c66|93c76|93c86|93c96} (need SPI-to-MW adapter)\n" \
-		"                select SPI EEPROM 25xxx {25010|25020|25040|25080|25160|25320|25640|25128|25256|25512|251024}\n" \
-		" -8             set organization 8-bit for Microwire EEPROM(default 16-bit) and set jumper on SPI-to-MW adapter\n" \
-		" -f <addr len>  set manual address size in bits for Microwire EEPROM(default auto)\n" \
-		" -s <bytes>     set page size from datasheet for fast write SPI EEPROM(default not usage)\n"
-#else
-#define EHELP	""
-#endif
-
 #define _VER	"1.7.8b2"
 
 void title(void)
 {
-#ifdef EEPROM_SUPPORT
-	printf("\nSNANDer - Serial Nor/nAND/Eeprom programmeR v." _VER " by McMCC <mcmcc@mail.ru>\n\n");
-#else
 	printf("\nSNANDer - Spi Nor/nAND programmER v." _VER " by McMCC <mcmcc@mail.ru>\n\n");
-#endif
 }
 
 void usage(void)
@@ -75,7 +49,6 @@ void usage(void)
 		" -k             Skip BAD pages, try read or write in to next page\n"\
 		" -L             print list support chips\n"\
 		" -i             read the chip ID info\n"\
-		"" EHELP ""\
 		" -e             erase chip(full or use with -a [-l])\n"\
 		" -l <bytes>     manually set length\n"\
 		" -a <address>   manually set address\n"\
@@ -96,65 +69,10 @@ int main(int argc, char* argv[])
 
 	title();
 
-#ifdef EEPROM_SUPPORT
-	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:E:f:8")) != -1)
-#else
 	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:")) != -1)
-#endif
 	{
 		switch(c)
 		{
-#ifdef EEPROM_SUPPORT
-			case 'E':
-				if ((eepromsize = parseEEPsize(optarg, &eeprom_info)) > 0) {
-					memset(eepromname, 0, sizeof(eepromname));
-					strncpy(eepromname, optarg, 10);
-					if (len > eepromsize) {
-						printf("Error set size %lld, max size %d for EEPROM %s!!!\n", len, eepromsize, eepromname);
-						exit(0);
-					}
-				} else if ((mw_eepromsize = deviceSize_3wire(optarg)) > 0) {
-					memset(eepromname, 0, sizeof(eepromname));
-					strncpy(eepromname, optarg, 10);
-					org = 1;
-					if (len > mw_eepromsize) {
-						printf("Error set size %lld, max size %d for EEPROM %s!!!\n", len, mw_eepromsize, eepromname);
-						exit(0);
-					}
-				} else if ((seepromsize = parseSEEPsize(optarg, &seeprom_info)) > 0) {
-					memset(eepromname, 0, sizeof(eepromname));
-					strncpy(eepromname, optarg, 10);
-					if (len > seepromsize) {
-						printf("Error set size %lld, max size %d for EEPROM %s!!!\n", len, seepromsize, eepromname);
-						exit(0);
-					}
-				} else {
-					printf("Unknown EEPROM chip %s!!!\n", optarg);
-					exit(0);
-				}
-				break;
-			case '8':
-				if (mw_eepromsize <= 0)
-				{
-					printf("-8 option only for Microwire EEPROM chips!!!\n");
-					exit(0);
-				}
-				org = 0;
-				break;
-			case 'f':
-				if (mw_eepromsize <= 0)
-				{
-					printf("-f option only for Microwire EEPROM chips!!!\n");
-					exit(0);
-				}
-				str = strdup(optarg);
-				fix_addr_len = strtoll(str, NULL, *str && *(str + 1) == 'x' ? 16 : 10);
-				if (fix_addr_len > 32) {
-						printf("Address len is very big!!!\n");
-						exit(0);
-				}
-				break;
-#endif
 			case 'I':
 				ECC_ignore = 1;
 				break;
@@ -172,10 +90,6 @@ int main(int argc, char* argv[])
 			case 'o':
 				str = strdup(optarg);
 				OOB_size = strtoll(str, NULL, *str && *(str + 1) == 'x' ? 16 : 10);
-				break;
-			case 's':
-				str = strdup(optarg);
-				spage_size = strtoll(str, NULL, *str && *(str + 1) == 'x' ? 16 : 10);
 				break;
 			case 'a':
 				str = strdup(optarg);
@@ -223,28 +137,8 @@ int main(int argc, char* argv[])
 	if((flen = flash_cmd_init(&prog)) <= 0)
 		goto out;
 
-#ifdef EEPROM_SUPPORT
-	if ((eepromsize || mw_eepromsize || seepromsize) && op == 'i') {
-		printf("Programmer not supported auto detect EEPROM!\n\n");
-		goto out;
-	}
-	if (spage_size) {
-		if (!seepromsize) {
-			printf("Use only for SPI EEPROM!\n\n");
-			goto out;
-		}
-		if (((spage_size % 8) != 0) || (spage_size > (MAX_SEEP_PSIZE / 2))){
-			printf("Invalid parameter %dB for page size SPI EEPROM!\n\n", spage_size);
-			goto out;
-		}
-		if (op == 'r')
-			printf("Ignored set page size SPI EEPROM on READ.\n");
-		else
-			printf("Setting page size %dB for write.\n", spage_size);
-	}
-#else
 	if (op == 'i') goto out;
-#endif
+
 	if (OOB_size) {
 		if (ECC_fcheck == 1) {
 			printf("Ignore option -o, use with -d only!\n");
