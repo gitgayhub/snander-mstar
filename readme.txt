@@ -2,7 +2,8 @@ SNANDer - Spi Nor/nAND programmER v.1.7.8b2 by McMCC <mcmcc_at_mail.ru>
 
   Usage:
  -h             display this message
- -c             programmer connection string
+ -c <device>    programmer connection string
+ -t <bytes>     set the transfer size
  -d             disable internal ECC(use read and write page size + OOB size)
  -o <bytes>     manual set OOB size with disable internal ECC(default 0)
  -I             ECC ignore errors(for read test only)

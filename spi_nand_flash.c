@@ -250,6 +250,7 @@ int ECC_fcheck = 1;
 int ECC_ignore = 0;
 int OOB_size = 0;
 int Skip_BAD_page = 0;
+int max_transfer = 32;
 
 static unsigned char _plane_select_bit = 0;
 static unsigned char _die_id = 0;
@@ -2009,8 +2010,13 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_page_read ( u32 page_number )
  *
  *------------------------------------------------------------------------------------
  */
-static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset, u32 len, u8 *ptr_rtn_buf, u32 read_mode,
-										SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
+#ifdef __amd64__
+static SPI_NAND_FLASH_RTN_T _spi_nand_protocol_read_from_cache( u32 data_offset,
+		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
+#else
+static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
+		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
+#endif
 {
 	struct SPI_NAND_FLASH_INFO_T *ptr_dev_info_t;
 	SPI_NAND_FLASH_RTN_T rtn_status = SPI_NAND_FLASH_RTN_NO_ERROR;
@@ -2105,6 +2111,30 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset, 
 
 	return (rtn_status);
 }
+
+#ifdef __amd64__
+static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
+		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
+{
+	SPI_NAND_FLASH_RTN_T rtn_status = SPI_NAND_FLASH_RTN_NO_ERROR;
+	int chunksz = max_transfer;
+	int pos;
+
+	/*
+	 * For mstar ddc we seem to loose bytes if the transfer is chunked
+	 * without resending the SPI commands. I think the controller is actually
+	 * clocking out a byte at the end at the end.
+	 * Resending the read command for each block to work around the spi
+	 * controller being out of sync.
+	 */
+	for (pos = 0; pos != len; pos += chunksz) {
+		rtn_status = _spi_nand_protocol_read_from_cache(pos, chunksz,
+			ptr_rtn_buf + pos, read_mode, dummy_mode);
+	}
+
+	return (rtn_status);
+}
+#endif
 
 /*------------------------------------------------------------------------------------
  * FUNCTION: static SPI_NAND_FLASH_RTN_T spi_nand_protocol_program_load( u32     addr,

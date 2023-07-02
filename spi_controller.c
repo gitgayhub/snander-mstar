@@ -42,12 +42,46 @@ SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Chip_Select_Low( void )
 
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Read_NByte( u8 *ptr_rtn_data, u32 len, SPI_CONTROLLER_SPEED_T speed )
 {
+#ifdef __amd64__
+	int ret;
+	u32 chunk_sz = min(len, max_transfer);
+
+	while (len) {
+		int read_sz = min(chunk_sz, len);
+		ret = spi_controller->send_command(0, read_sz, NULL, ptr_rtn_data);
+		ptr_rtn_data += read_sz;
+		len -= read_sz;
+		if (ret) {
+			break;
+		}
+	}
+
+	return (SPI_CONTROLLER_RTN_T)ret;
+#else
 	return (SPI_CONTROLLER_RTN_T)spi_controller->send_command(0, len, NULL, ptr_rtn_data);
+#endif
 }
 
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Write_NByte( u8 *ptr_data, u32 len, SPI_CONTROLLER_SPEED_T speed )
 {
+#ifdef __amd64__
+	int ret;
+	u32 chunk_sz = min(len, max_transfer);
+
+	while (len) {
+		int write_sz = min(chunk_sz, len);
+		ret = spi_controller->send_command(write_sz, 0, ptr_data, NULL);
+		ptr_data += write_sz;
+		len -= write_sz;
+		if (ret) {
+			break;
+		}
+	}
+
+	return (SPI_CONTROLLER_RTN_T)ret;
+#else
 	return (SPI_CONTROLLER_RTN_T)spi_controller->send_command(len, 0, ptr_data, NULL);
+#endif
 }
 
 #if 0

@@ -16,16 +16,16 @@ jobs:
           FILE=arm-linux-musleabi
           wget -nv https://musl.cc/$FILE-cross.tgz
           tar -xf $FILE-cross.tgz
-          make CC=$PWD/$FILE-cross/bin/$FILE-gcc -C src
-          mv src/snander snander-arm
+          make CFLAGS="-static -s" CC=$PWD/$FILE-cross/bin/$FILE-gcc
+          mv snander snander-arm
 
       - name: Build x64
         run: |
           FILE=x86_64-linux-musl
           wget -nv https://musl.cc/$FILE-cross.tgz
           tar -xf $FILE-cross.tgz
-          make CC=$PWD/$FILE-cross/bin/$FILE-gcc -C src
-          mv src/snander snander-x64
+          make CFLAGS="-static -s" CC=$PWD/$FILE-cross/bin/$FILE-gcc
+          mv snander snander-x64
 
       - name: Upload
         uses: softprops/action-gh-release@v1

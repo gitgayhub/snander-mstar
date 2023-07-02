@@ -32,6 +32,12 @@
 #define min(a,b) (((a)<(b))?(a):(b))
 #define max(a,b) (((a)>(b))?(a):(b))
 
+#ifdef __amd64__
+#define I2C_CONNECTION "/dev/i2c-0"
+#else
+#define I2C_CONNECTION "/dev/i2c-1"
+#endif
+
 /* TYPE DECLARATIONS ----------------------------------------------------------------- */
 typedef enum{
 	SPI_CONTROLLER_SPEED_SINGLE = 0,
@@ -65,6 +71,7 @@ struct spi_controller {
 
 extern const struct spi_controller *spi_controller;
 extern const struct spi_controller mstar_spictrl;
+extern int max_transfer;
 
 /*------------------------------------------------------------------------------------
  * FUNCTION: SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Enable_Manual_Mode( void )

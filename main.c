@@ -30,15 +30,13 @@
 
 struct flash_cmd prog;
 extern unsigned int bsize;
-
-#define I2C_CONNECTION "/dev/i2c-1"
 const struct spi_controller *spi_controller;
 
 #define _VER	"1.7.8b2"
 
 void title(void)
 {
-	printf("\nSNANDer - Spi Nor/nAND programmER v." _VER " by McMCC <mcmcc@mail.ru>\n\n");
+	printf("SNANDer - Spi Nor/nAND programmER v." _VER " by McMCC <mcmcc@mail.ru>\n\n");
 }
 
 void usage(void)
@@ -46,7 +44,8 @@ void usage(void)
 	const char use[] =
 		"  Usage:\n"\
 		" -h             display this message\n"\
-		" -c             programmer connection string\n"\
+		" -c <device>    programmer connection string\n"\
+		" -t <bytes>     set the transfer size\n"\
 		" -d             disable internal ECC(use read and write page size + OOB size)\n"\
 		" -o <bytes>     manual set OOB size with disable internal ECC(default 0)\n"\
 		" -I             ECC ignore errors(for read test only)\n"\
@@ -75,12 +74,16 @@ int main(int argc, char* argv[])
 
 	title();
 
-	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:c:")) != -1)
+	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:c:t:")) != -1)
 	{
 		switch(c)
 		{
 			case 'c':
 				connection = strdup(optarg);
+				break;
+			case 't':
+				str = strdup(optarg);
+				max_transfer = strtoll(str, NULL, *str && *(str + 1) == 'x' ? 16 : 10);
 				break;
 			case 'I':
 				ECC_ignore = 1;

@@ -30,8 +30,8 @@
 
 #define MSTAR_DELAY 10
 static u8 buffer[4096];
-int mstar_fd;
-int mstar_err;
+static int mstar_fd = 0;
+static int mstar_err = 0;
 
 static int mstar_spi_end_command(void) {
 	usleep(MSTAR_DELAY);
@@ -51,10 +51,14 @@ static int mstar_spi_init(const char *i2c_device) {
 		return -1;
 	}
 
+#ifdef __amd64__
+	printf("Connection: %s, transfer size: %dB\n", i2c_device, max_transfer);
+#else
 	printf("Connection: %s\n", i2c_device);
+#endif
 
 	if (ioctl(mstar_fd, I2C_SLAVE, MSTAR_PORT) < 0) {
-		printf("Error setting address 0x%02x: %s\n", MSTAR_PORT, strerror(errno));
+		printf("Error setting address 0x%X: %s\n", MSTAR_PORT, strerror(errno));
 		close(mstar_fd);
 		return -1;
 	}
@@ -108,7 +112,7 @@ static int mstar_spi_send_command(unsigned int writecnt, unsigned int readcnt,
 }
 
 const struct spi_controller mstar_spictrl = {
-	.name = "mstar",
+	.name = "mstar_spi",
 	.init = mstar_spi_init,
 	.shutdown = mstar_spi_shutdown,
 	.send_command = mstar_spi_send_command,
