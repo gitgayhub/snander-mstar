@@ -1,8 +1,8 @@
 name: build
 on:
   push:
-    tags:
-      - latest
+    branches:
+      - master
 
 jobs:
   build:
@@ -11,14 +11,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build
+      - name: Build arm
         run: |
           FILE=arm-linux-musleabi
           wget -nv https://musl.cc/$FILE-cross.tgz
           tar -xf $FILE-cross.tgz
           make CC=$PWD/$FILE-cross/bin/$FILE-gcc -C src
+          mv src/snander snander-arm
+
+      - name: Build x64
+        run: |
+          FILE=x86_64-linux-musl
+          wget -nv https://musl.cc/$FILE-cross.tgz
+          tar -xf $FILE-cross.tgz
+          make CC=$PWD/$FILE-cross/bin/$FILE-gcc -C src
+          mv src/snander snander-x64
 
       - name: Upload
         uses: softprops/action-gh-release@v1
         with:
-          files: src/snander
+          tag_name: latest
+          files: |
+            snander-arm
+            snander-x64
