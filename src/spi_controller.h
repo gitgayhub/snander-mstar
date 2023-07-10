@@ -23,20 +23,24 @@
 #define __SPI_CONTROLLER_H__
 
 /* INCLUDE FILE DECLARATIONS --------------------------------------------------------- */
+#include <stdbool.h>
 #include <stddef.h>
 #include "types.h"
 
 /* NAMING CONSTANT DECLARATIONS ------------------------------------------------------ */
 
 /* MACRO DECLARATIONS ---------------------------------------------------------------- */
+#ifndef min
 #define min(a,b) (((a)<(b))?(a):(b))
-#define max(a,b) (((a)>(b))?(a):(b))
-
-#ifdef __amd64__
-#define I2C_CONNECTION "/dev/i2c-0"
-#else
-#define I2C_CONNECTION "/dev/i2c-1"
 #endif
+
+#ifndef max
+#define max(a,b) (((a)>(b))?(a):(b))
+#endif
+
+#define I2C_CONNECTION "/dev/i2c-0"
+#define CH341A_DEVICE "ch341a"
+#define MSTAR_DEVICE "mstar"
 
 /* TYPE DECLARATIONS ----------------------------------------------------------------- */
 typedef enum{
@@ -66,11 +70,12 @@ struct spi_controller {
 	int (*init)(const char *);
 	int (*shutdown)(void);
 	int (*send_command)(unsigned int, unsigned int, const unsigned char *, unsigned char *);
-	int (*cs_release)(void);
+	int (*cs_release)(bool enable);
 };
 
 extern const struct spi_controller *spi_controller;
-extern const struct spi_controller mstar_spictrl;
+extern const struct spi_controller ch341a_spi_ctrl;
+extern const struct spi_controller mstar_spi_ctrl;
 extern int max_transfer;
 
 /*------------------------------------------------------------------------------------

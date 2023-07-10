@@ -18,6 +18,7 @@
  *
  *======================================================================================
  */
+#include <string.h>
 #include "spi_controller.h"
 
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Enable_Manual_Mode( void )
@@ -32,19 +33,22 @@ SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Write_One_Byte( u8  data )
 
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Chip_Select_High( void )
 {
-	return spi_controller->cs_release();
+	return spi_controller->cs_release(false);
 }
 
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Chip_Select_Low( void )
 {
-	return 0;
+	return spi_controller->cs_release(true);
 }
 
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Read_NByte( u8 *ptr_rtn_data, u32 len, SPI_CONTROLLER_SPEED_T speed )
 {
-#ifdef __amd64__
 	int ret;
 	u32 chunk_sz = min(len, max_transfer);
+
+	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
+		return (SPI_CONTROLLER_RTN_T)spi_controller->send_command(0, len, NULL, ptr_rtn_data);
+	}
 
 	while (len) {
 		int read_sz = min(chunk_sz, len);
@@ -57,16 +61,16 @@ SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Read_NByte( u8 *ptr_rtn_data, u32 len, SPI_C
 	}
 
 	return (SPI_CONTROLLER_RTN_T)ret;
-#else
-	return (SPI_CONTROLLER_RTN_T)spi_controller->send_command(0, len, NULL, ptr_rtn_data);
-#endif
 }
 
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Write_NByte( u8 *ptr_data, u32 len, SPI_CONTROLLER_SPEED_T speed )
 {
-#ifdef __amd64__
 	int ret;
 	u32 chunk_sz = min(len, max_transfer);
+
+	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
+		return (SPI_CONTROLLER_RTN_T)spi_controller->send_command(len, 0, ptr_data, NULL);
+	}
 
 	while (len) {
 		int write_sz = min(chunk_sz, len);
@@ -79,9 +83,6 @@ SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Write_NByte( u8 *ptr_data, u32 len, SPI_CONT
 	}
 
 	return (SPI_CONTROLLER_RTN_T)ret;
-#else
-	return (SPI_CONTROLLER_RTN_T)spi_controller->send_command(len, 0, ptr_data, NULL);
-#endif
 }
 
 #if 0

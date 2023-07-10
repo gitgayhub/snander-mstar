@@ -29,7 +29,7 @@ long flash_cmd_init(struct flash_cmd *cmd)
 		cmd->flash_write = snor_write;
 		cmd->flash_read  = snor_read;
 	} else {
-		printf("\nFlash not found!\n\n");
+		printf("\nFlash not found!\n");
 	}
 
 	return flen;

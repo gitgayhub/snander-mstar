@@ -11,26 +11,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build arm
+      - name: Windows
         run: |
-          FILE=arm-linux-musleabi
-          wget -nv https://musl.cc/$FILE-cross.tgz
-          tar -xf $FILE-cross.tgz
-          make CFLAGS="-static -s" CC=$PWD/$FILE-cross/bin/$FILE-gcc
-          mv snander snander-arm
-
-      - name: Build x64
-        run: |
-          FILE=x86_64-linux-musl
-          wget -nv https://musl.cc/$FILE-cross.tgz
-          tar -xf $FILE-cross.tgz
-          make CFLAGS="-static -s" CC=$PWD/$FILE-cross/bin/$FILE-gcc
-          mv snander snander-x64
+          sudo apt-get update
+          sudo apt-get install mingw-w64
+          git clone https://github.com/libusb/libusb
+          bash -c "cd libusb; ./autogen.sh --host=x86_64-w64-mingw32 --libdir=$PWD; make -j8 install-exec"
+          make CC=x86_64-w64-mingw32-gcc CFLAGS="-static -s"
+          zip -r snander.zip driver snander.exe
 
       - name: Upload
         uses: softprops/action-gh-release@v1
         with:
           tag_name: latest
-          files: |
-            snander-arm
-            snander-x64
+          files: snander.zip

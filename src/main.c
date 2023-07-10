@@ -32,7 +32,7 @@ struct flash_cmd prog;
 extern unsigned int bsize;
 const struct spi_controller *spi_controller;
 
-#define _VER	"1.7.8b2"
+#define _VER "1.7.9"
 
 void title(void)
 {
@@ -44,15 +44,16 @@ void usage(void)
 	const char use[] =
 		"  Usage:\n"\
 		" -h             display this message\n"\
-		" -c <device>    programmer connection string\n"\
-		" -t <bytes>     set the transfer size\n"\
-		" -d             disable internal ECC(use read and write page size + OOB size)\n"\
-		" -o <bytes>     manual set OOB size with disable internal ECC(default 0)\n"\
-		" -I             ECC ignore errors(for read test only)\n"\
+		" -p <name>      select programmer device (ch341a, mstar)\n"\
+		" -c <device>    mstar programmer i2c connection string\n"\
+		" -t <bytes>     mstar programmer transfer size\n"\
+		" -d             disable internal ECC (use read and write page size + OOB size)\n"\
+		" -o <bytes>     manual set OOB size with disable internal ECC (default 0)\n"\
+		" -I             ECC ignore errors (for read test only)\n"\
 		" -k             Skip BAD pages, try read or write in to next page\n"\
 		" -L             print list support chips\n"\
 		" -i             read the chip ID info\n"\
-		" -e             erase chip(full or use with -a [-l])\n"\
+		" -e             erase chip (full or use with -a [-l])\n"\
 		" -l <bytes>     manually set length\n"\
 		" -a <address>   manually set address\n"\
 		" -w <filename>  write chip with data from filename\n"\
@@ -69,15 +70,22 @@ int main(int argc, char* argv[])
 	unsigned char *buf;
 	int long long len = 0, addr = 0, flen = 0, wlen = 0;
 	char *connection = I2C_CONNECTION;
-	spi_controller = &mstar_spictrl;
-	FILE *fp;
+#ifdef __MINGW32__
+	char *programmer = CH341A_DEVICE;
+#else
+	char *programmer = MSTAR_DEVICE;
+#endif
 
+	FILE *fp;
 	title();
 
-	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:c:t:")) != -1)
+	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:p:c:t:")) != -1)
 	{
 		switch(c)
 		{
+			case 'p':
+				programmer = strdup(optarg);
+				break;
 			case 'c':
 				connection = strdup(optarg);
 				break;
@@ -141,8 +149,19 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+	if (strcmp(programmer, CH341A_DEVICE) == 0) {
+		spi_controller = &ch341a_spi_ctrl;
+#ifndef __MINGW32__
+	} else if (strcmp(programmer, MSTAR_DEVICE) == 0) {
+		spi_controller = &mstar_spi_ctrl;
+#endif
+	} else {
+		printf("Unknown programmer selected!\n");
+		return -1;
+	}
+
 	if (spi_controller->init(connection) < 0) {
-		printf("Programmer device not found!\n\n");
+		printf("Programmer device not found!\n");
 		return -1;
 	}
 
@@ -290,10 +309,11 @@ very:
 		goto okout;
 	}
 
-out:	//exit with errors
+out:
 	spi_controller->shutdown();
 	return -1;
-okout:	//exit without errors
+
+okout:
 	spi_controller->shutdown();
 	return 0;
 }

@@ -1,11 +1,17 @@
 TARGET ?= snander
-CFLAGS := -Wall -s
-FILES := main.o flashcmd_api.o mstar_spi.o spi_controller.o spi_nand_flash.o spi_nor_flash.o timer.o
+CFLAGS += -Wall -s
+FILES += src/main.o src/ch341a_spi.c src/flashcmd_api.o src/timer.o \
+	src/spi_controller.o src/spi_nand_flash.o src/spi_nor_flash.o
 
-all: clean $(TARGET)
+ifeq ($(findstring mingw,$(CC)),)
+FILES += src/mstar_spi.c
+LDFLAGS += $(shell pkg-config libusb-1.0 --libs --cflags)
+else
+LDFLAGS += -I libusb/libusb -L $(PWD) -lusb-1.0
+endif
 
-$(TARGET): $(FILES)
-	$(CC) $(CFLAGS) $(FILES) -o $(TARGET)
+all: clean $(FILES)
+	$(CC) $(CFLAGS) $(FILES) $(LDFLAGS) -o $(TARGET)
 
 clean:
-	rm -f *.o $(TARGET)
+	rm -f src/*.o

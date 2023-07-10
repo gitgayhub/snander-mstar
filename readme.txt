@@ -2,15 +2,16 @@ SNANDer - Spi Nor/nAND programmER v.1.7.8b2 by McMCC <mcmcc_at_mail.ru>
 
   Usage:
  -h             display this message
- -c <device>    programmer connection string
- -t <bytes>     set the transfer size
- -d             disable internal ECC(use read and write page size + OOB size)
- -o <bytes>     manual set OOB size with disable internal ECC(default 0)
- -I             ECC ignore errors(for read test only)
+ -p <name>      select programmer device (ch341a, mstar)
+ -c <device>    mstar programmer i2c connection string
+ -t <bytes>     mstar programmer transfer size
+ -d             disable internal ECC (use read and write page size + OOB size)
+ -o <bytes>     manual set OOB size with disable internal ECC (default 0)
+ -I             ECC ignore errors (for read test only)
  -k             Skip BAD pages, try read or write in to next page
  -L             print list support chips
  -i             read the chip ID info
- -e             erase chip(full or use with -a [-l])
+ -e             erase chip (full or use with -a [-l])
  -l <bytes>     manually set length
  -a <address>   manually set address
  -w <filename>  write chip with data from filename

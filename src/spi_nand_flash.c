@@ -2010,13 +2010,8 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_page_read ( u32 page_number )
  *
  *------------------------------------------------------------------------------------
  */
-#ifdef __amd64__
 static SPI_NAND_FLASH_RTN_T _spi_nand_protocol_read_from_cache( u32 data_offset,
 		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
-#else
-static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
-		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
-#endif
 {
 	struct SPI_NAND_FLASH_INFO_T *ptr_dev_info_t;
 	SPI_NAND_FLASH_RTN_T rtn_status = SPI_NAND_FLASH_RTN_NO_ERROR;
@@ -2112,7 +2107,6 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
 	return (rtn_status);
 }
 
-#ifdef __amd64__
 static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
 		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
 {
@@ -2120,10 +2114,13 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
 	int chunksz = max_transfer;
 	int pos;
 
+	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
+		return _spi_nand_protocol_read_from_cache(data_offset, len, ptr_rtn_buf, read_mode, dummy_mode);
+	}
+
 	/*
 	 * For mstar ddc we seem to loose bytes if the transfer is chunked
-	 * without resending the SPI commands. I think the controller is actually
-	 * clocking out a byte at the end at the end.
+	 * without resending the SPI commands.
 	 * Resending the read command for each block to work around the spi
 	 * controller being out of sync.
 	 */
@@ -2134,7 +2131,6 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
 
 	return (rtn_status);
 }
-#endif
 
 /*------------------------------------------------------------------------------------
  * FUNCTION: static SPI_NAND_FLASH_RTN_T spi_nand_protocol_program_load( u32     addr,
