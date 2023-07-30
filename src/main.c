@@ -149,10 +149,11 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
+#ifdef __MINGW32__
 	if (strcmp(programmer, CH341A_DEVICE) == 0) {
 		spi_controller = &ch341a_spi_ctrl;
-#ifndef __MINGW32__
-	} else if (strcmp(programmer, MSTAR_DEVICE) == 0) {
+#else
+	if (strcmp(programmer, MSTAR_DEVICE) == 0) {
 		spi_controller = &mstar_spi_ctrl;
 #endif
 	} else {
