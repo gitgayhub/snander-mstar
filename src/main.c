@@ -270,7 +270,7 @@ very:
 			goto out;
 		}
 		if (svr) {
-			unsigned char ch1;
+			unsigned char ch1, ch2;
 			int i = 0;
 
 			fseek(fp, 0, SEEK_SET);
@@ -279,7 +279,10 @@ very:
 			while ((ch1 != EOF) && (i < len - 1) && (ch1 == buf[i++]))
 				ch1 = (unsigned char)getc(fp);
 
-			if (ch1 == buf[i]){
+			fseek(fp, wlen - 1, SEEK_SET);
+			ch2 = (unsigned char)getc(fp);
+
+			if (ch1 == buf[i] || ch2 == buf[wlen - 1]) {
 				printf("Status: OK\n");
 				fclose(fp);
 				free(buf);

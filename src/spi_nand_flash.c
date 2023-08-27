@@ -2254,20 +2254,15 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
 		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
 {
 	SPI_NAND_FLASH_RTN_T rtn_status = SPI_NAND_FLASH_RTN_NO_ERROR;
-	int chunksz = max_transfer;
-	int pos;
+	u32 chunksz;
 
 	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
-		return _spi_nand_protocol_read_from_cache(data_offset, len, ptr_rtn_buf, read_mode, dummy_mode);
+		return _spi_nand_protocol_read_from_cache(data_offset, len,
+			ptr_rtn_buf, read_mode, dummy_mode);
 	}
 
-	/*
-	 * For mstar ddc we seem to loose bytes if the transfer is chunked
-	 * without resending the SPI commands.
-	 * Resending the read command for each block to work around the spi
-	 * controller being out of sync.
-	 */
-	for (pos = 0; pos != len; pos += chunksz) {
+	for (u32 pos = 0; pos != len; pos += chunksz) {
+		chunksz = min(len - pos, max_transfer);
 		rtn_status = _spi_nand_protocol_read_from_cache(pos, chunksz,
 			ptr_rtn_buf + pos, read_mode, dummy_mode);
 	}

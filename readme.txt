@@ -1,4 +1,4 @@
-SNANDer - Spi Nor/nAND programmER v.1.7.8b2 by McMCC <mcmcc_at_mail.ru>
+SNANDer - Spi Nor/nAND programmER v.1.7.9 by McMCC <mcmcc_at_mail.ru>
 
   Usage:
  -h             display this message

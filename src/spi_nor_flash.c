@@ -836,7 +836,7 @@ int snor_erase(unsigned long offs, unsigned long len)
 	return 0;
 }
 
-int snor_read(unsigned char *buf, unsigned long from, unsigned long len)
+static int snor_read_internal(unsigned char *buf, unsigned long from, unsigned long len, bool print)
 {
 	u32 read_addr, physical_read_addr, remain_len, data_offset;
 
@@ -846,7 +846,9 @@ int snor_read(unsigned char *buf, unsigned long from, unsigned long len)
 	if (len == 0)
 		return 0;
 
-	timer_start();
+	if (print)
+		timer_start();
+
 	/* Wait till previous write/erase is done. */
 	if (snor_wait_ready(1)) {
 		/* REVISIT status return?? */
@@ -856,8 +858,7 @@ int snor_read(unsigned char *buf, unsigned long from, unsigned long len)
 	read_addr = from;
 	remain_len = len;
 
-	while(remain_len > 0) {
-
+	while (remain_len > 0) {
 		physical_read_addr = read_addr;
 		data_offset = (physical_read_addr % (spi_chip_info->sector_size));
 
@@ -895,7 +896,7 @@ int snor_read(unsigned char *buf, unsigned long from, unsigned long len)
 			}
 			remain_len -= spi_chip_info->sector_size - data_offset;
 			read_addr += spi_chip_info->sector_size - data_offset;
-			if( timer_progress() ) {
+			if (timer_progress() && print) {
 				printf("\bRead %ld%% [%lu] of [%lu] bytes      ", 100 * (len - remain_len) / len, len - remain_len, len);
 				printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 				fflush(stdout);
@@ -907,10 +908,39 @@ int snor_read(unsigned char *buf, unsigned long from, unsigned long len)
 		if (spi_chip_info->addr4b)
 			snor_4byte_mode(0);
 	}
-	printf("Read 100%% [%lu] of [%lu] bytes      \n", len - remain_len, len);
-	timer_end();
+
+	if (print) {
+		printf("Read 100%% [%lu] of [%lu] bytes      \n", len - remain_len, len);
+		timer_end();
+	}
 
 	return len;
+}
+
+int snor_read(unsigned char *buf, unsigned long from, unsigned long len)
+{
+	u32 chunksz, pos;
+	int ret;
+
+	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
+		return snor_read_internal(buf, from, len, true);
+	}
+
+	timer_start();
+	for (pos = 0; pos != len; pos += chunksz) {
+		chunksz = min(len - pos, max_transfer);
+		ret = snor_read_internal(buf + pos, from + pos, chunksz, false);
+		if (timer_progress()) {
+			printf("\rRead %ld%% [%d] of [%ld] bytes      ", 100 * pos / len, pos, len);
+			printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+			fflush(stdout);
+		}
+	}
+
+	printf("Read 100%% [%d] of [%ld] bytes      \n", pos, len);
+	timer_end();
+
+	return ret;
 }
 
 int snor_write(unsigned char *buf, unsigned long to, unsigned long len)
