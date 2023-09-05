@@ -20,14 +20,14 @@ long flash_cmd_init(struct flash_cmd *cmd)
 {
 	long flen = -1;
 
-	if ((flen = snand_init()) > 0) {
-		cmd->flash_erase = snand_erase;
-		cmd->flash_write = snand_write;
-		cmd->flash_read  = snand_read;
-	} else if ((flen = snor_init()) > 0) {
+	if ((flen = snor_init()) > 0) {
 		cmd->flash_erase = snor_erase;
 		cmd->flash_write = snor_write;
-		cmd->flash_read  = snor_read;
+		cmd->flash_read = snor_read;
+	} else if ((flen = snand_init()) > 0) {
+		cmd->flash_erase = snand_erase;
+		cmd->flash_write = snand_write;
+		cmd->flash_read = snand_read;
 	} else {
 		printf("\nFlash not found!\n");
 	}
