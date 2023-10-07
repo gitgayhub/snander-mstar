@@ -170,7 +170,7 @@ static int ch341a_i2c_init(const char *options) {
 
 	uint8_t buf[] = {
 		CH341A_CMD_I2C_STREAM,
-		CH341A_CMD_I2C_STM_SET | CH341A_I2C_400KHZ,
+		CH341A_CMD_I2C_STM_SET | CH341A_I2C_100KHZ,
 		CH341A_CMD_I2C_STM_END
 	};
 
