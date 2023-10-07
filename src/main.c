@@ -32,11 +32,11 @@ struct flash_cmd prog;
 extern unsigned int bsize;
 const struct spi_controller *spi_controller;
 
-#define _VER "1.7.9"
+#define _VER "1.8.0"
 
 void title(void)
 {
-	printf("SNANDer - Spi Nor/nAND programmER v." _VER " by McMCC <mcmcc@mail.ru>\n\n");
+	printf("SNANDer - Spi Nor/nAND programmER " _VER " by McMCC\n\n");
 }
 
 void usage(void)
@@ -44,9 +44,7 @@ void usage(void)
 	const char use[] =
 		"  Usage:\n"\
 		" -h             display this message\n"\
-		" -p <name>      select programmer device (ch341a, mstar)\n"\
-		" -c <device>    mstar programmer i2c connection string\n"\
-		" -t <bytes>     mstar programmer transfer size\n"\
+		" -p <name>      select programmer device (mstar, ch341a)\n"\
 		" -d             disable internal ECC (use read and write page size + OOB size)\n"\
 		" -o <bytes>     manual set OOB size with disable internal ECC (default 0)\n"\
 		" -I             ECC ignore errors (for read test only)\n"\
@@ -69,29 +67,17 @@ int main(int argc, char* argv[])
 	char *str, *fname = NULL, op = 0;
 	unsigned char *buf;
 	int long long len = 0, addr = 0, flen = 0, wlen = 0;
-	char *connection = I2C_CONNECTION;
-#ifdef __MINGW32__
-	char *programmer = CH341A_DEVICE;
-#else
-	char *programmer = MSTAR_DEVICE;
-#endif
+	char *programmer = CH341A_I2C_DEVICE;
 
 	FILE *fp;
 	title();
 
-	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:p:c:t:")) != -1)
+	while ((c = getopt(argc, argv, "diIhveLkl:a:w:r:o:s:p:")) != -1)
 	{
 		switch(c)
 		{
 			case 'p':
 				programmer = strdup(optarg);
-				break;
-			case 'c':
-				connection = strdup(optarg);
-				break;
-			case 't':
-				str = strdup(optarg);
-				max_transfer = strtoll(str, NULL, *str && *(str + 1) == 'x' ? 16 : 10);
 				break;
 			case 'I':
 				ECC_ignore = 1;
@@ -149,19 +135,16 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-#ifdef __MINGW32__
-	if (strcmp(programmer, CH341A_DEVICE) == 0) {
+	if (strcmp(programmer, CH341A_I2C_DEVICE) == 0) {
+		spi_controller = &ch341a_i2c_ctrl;
+	} else if (strcmp(programmer, CH341A_SPI_DEVICE) == 0) {
 		spi_controller = &ch341a_spi_ctrl;
-#else
-	if (strcmp(programmer, MSTAR_DEVICE) == 0) {
-		spi_controller = &mstar_spi_ctrl;
-#endif
 	} else {
 		printf("Unknown programmer selected!\n");
 		return -1;
 	}
 
-	if (spi_controller->init(connection) < 0) {
+	if (spi_controller->init(NULL) < 0) {
 		printf("Programmer device not found!\n");
 		return -1;
 	}

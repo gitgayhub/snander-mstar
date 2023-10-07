@@ -807,7 +807,7 @@ int snor_erase(unsigned long offs, unsigned long len)
 
 	if(!offs && len == (spi_chip_info->sector_size * spi_chip_info->n_sectors))
 	{
-		printf("Please Wait......\n");
+		printf("Please Wait...\n");
 		return full_erase_chip();
 	}
 
@@ -919,17 +919,17 @@ static int snor_read_internal(unsigned char *buf, unsigned long from, unsigned l
 
 int snor_read(unsigned char *buf, unsigned long from, unsigned long len)
 {
-	u32 chunksz, pos;
+	u32 size, pos;
 	int ret;
 
-	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
+	if (strcmp(spi_controller->name, CH341A_SPI_DEVICE) == 0) {
 		return snor_read_internal(buf, from, len, true);
 	}
 
 	timer_start();
-	for (pos = 0; pos != len; pos += chunksz) {
-		chunksz = min(len - pos, max_transfer);
-		ret = snor_read_internal(buf + pos, from + pos, chunksz, false);
+	for (pos = 0; pos != len; pos += size) {
+		size = min(len - pos, CH341A_PACKET);
+		ret = snor_read_internal(buf + pos, from + pos, size, false);
 		if (timer_progress()) {
 			printf("\rRead %ld%% [%d] of [%ld] bytes      ", 100 * pos / len, pos, len);
 			printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");

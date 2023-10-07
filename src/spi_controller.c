@@ -49,15 +49,15 @@ SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Read_NByte( u8 *ptr_rtn_data, u32 len, SPI_C
 SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Write_NByte( u8 *ptr_data, u32 len, SPI_CONTROLLER_SPEED_T speed )
 {
 	int ret;
-	u32 chunksz;
+	u32 size;
 
-	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
+	if (strcmp(spi_controller->name, CH341A_SPI_DEVICE) == 0) {
 		return (SPI_CONTROLLER_RTN_T)spi_controller->send_command(len, 0, ptr_data, NULL);
 	}
 
-	for (u32 pos = 0; pos != len; pos += chunksz) {
-		chunksz = min(len - pos, max_transfer);
-		ret = spi_controller->send_command(chunksz, 0, ptr_data + pos, NULL);
+	for (u32 pos = 0; pos != len; pos += size) {
+		size = min(len - pos, CH341A_PACKET);
+		ret = spi_controller->send_command(size, 0, ptr_data + pos, NULL);
 		if (ret) {
 			break;
 		}

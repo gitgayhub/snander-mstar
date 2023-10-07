@@ -490,7 +490,7 @@ close_handle:
 }
 
 const struct spi_controller ch341a_spi_ctrl = {
-	.name = CH341A_DEVICE,
+	.name = CH341A_SPI_DEVICE,
 	.init = ch341a_spi_init,
 	.shutdown = ch341a_spi_shutdown,
 	.send_command = ch341a_spi_send_command,

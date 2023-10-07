@@ -1,10 +1,8 @@
-SNANDer - Spi Nor/nAND programmER v.1.7.9 by McMCC <mcmcc_at_mail.ru>
+SNANDer - Spi Nor/nAND programmER v.1.8.0 by McMCC
 
   Usage:
  -h             display this message
- -p <name>      select programmer device (ch341a, mstar)
- -c <device>    mstar programmer i2c connection string
- -t <bytes>     mstar programmer transfer size
+ -p <name>      select programmer device (mstar, ch341a)
  -d             disable internal ECC (use read and write page size + OOB size)
  -o <bytes>     manual set OOB size with disable internal ECC (default 0)
  -I             ECC ignore errors (for read test only)

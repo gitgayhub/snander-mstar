@@ -38,9 +38,9 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #endif
 
-#define I2C_CONNECTION "/dev/i2c-0"
-#define CH341A_DEVICE "ch341a"
-#define MSTAR_DEVICE "mstar"
+#define CH341A_PACKET 26
+#define CH341A_I2C_DEVICE "mstar"
+#define CH341A_SPI_DEVICE "ch341a"
 
 /* TYPE DECLARATIONS ----------------------------------------------------------------- */
 typedef enum{
@@ -74,9 +74,8 @@ struct spi_controller {
 };
 
 extern const struct spi_controller *spi_controller;
+extern const struct spi_controller ch341a_i2c_ctrl;
 extern const struct spi_controller ch341a_spi_ctrl;
-extern const struct spi_controller mstar_spi_ctrl;
-extern int max_transfer;
 
 /*------------------------------------------------------------------------------------
  * FUNCTION: SPI_CONTROLLER_RTN_T SPI_CONTROLLER_Enable_Manual_Mode( void )

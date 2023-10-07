@@ -261,7 +261,6 @@ int ECC_fcheck = 1;
 int ECC_ignore = 0;
 int OOB_size = 0;
 int Skip_BAD_page = 0;
-int max_transfer = 32;
 
 static unsigned char _plane_select_bit = 0;
 static unsigned char _die_id = 0;
@@ -2254,16 +2253,16 @@ static SPI_NAND_FLASH_RTN_T spi_nand_protocol_read_from_cache( u32 data_offset,
 		u32 len, u8 *ptr_rtn_buf, u32 read_mode, SPI_NAND_FLASH_READ_DUMMY_BYTE_T dummy_mode )
 {
 	SPI_NAND_FLASH_RTN_T rtn_status = SPI_NAND_FLASH_RTN_NO_ERROR;
-	u32 chunksz;
+	u32 size;
 
-	if (strcmp(spi_controller->name, CH341A_DEVICE) == 0) {
+	if (strcmp(spi_controller->name, CH341A_SPI_DEVICE) == 0) {
 		return _spi_nand_protocol_read_from_cache(data_offset, len,
 			ptr_rtn_buf, read_mode, dummy_mode);
 	}
 
-	for (u32 pos = 0; pos != len; pos += chunksz) {
-		chunksz = min(len - pos, max_transfer);
-		rtn_status = _spi_nand_protocol_read_from_cache(pos, chunksz,
+	for (u32 pos = 0; pos != len; pos += size) {
+		size = min(len - pos, CH341A_PACKET);
+		rtn_status = _spi_nand_protocol_read_from_cache(pos, size,
 			ptr_rtn_buf + pos, read_mode, dummy_mode);
 	}
 
